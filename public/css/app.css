@@ -1,0 +1,10 @@
+#frontpage-header {
+  padding: 15vh 50px;
+  background: url(/images/wrack.jpg?36092c5d76c5568bd50eca84c79c1d22) no-repeat center center;
+  color: white;
+}
+
+#frontpage-header h1 {
+  font-size: 400%;
+}
+
