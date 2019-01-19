@@ -14,6 +14,17 @@
 Route::get('/', 'HomeController@index');
 
 //Auth
-Route::post('/register', 'Auth\RegisterController@register');
+//Route::post('/register', 'Auth\RegisterController@register');
 
 
+
+Auth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
+
+Route::get('/test', function() {
+    return view('test')->with([
+        'islands' => \App\Island::all(),
+        'usercount' => \App\User::count()
+    ]);
+});

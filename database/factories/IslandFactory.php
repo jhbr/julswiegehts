@@ -13,10 +13,10 @@ use Faker\Generator as Faker;
 |
 */
 
-$factory->define(App\User::class, function (Faker $faker) {
+$factory->define(App\Island::class, function (Faker $faker) {
     return [
-        'username' => $faker->unique()->userName,
-        'twitch_name' => $faker->unique()->firstName,
+        'username' => $faker->userName,
+        'twitch_name' => $faker->firstName,
         'email' => $faker->unique()->safeEmail,
         'email_verified_at' => now(),
         'password' => bcrypt($faker->password), // secret
