@@ -1,0 +1,632 @@
+{
+	"info": {
+		"_postman_id": "42c8f8df-2dfe-4b7d-8c37-6c9520718a70",
+		"name": "PhysistAssistantServer",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Account",
+			"item": [
+				{
+					"name": "auth",
+					"item": [
+						{
+							"name": "/api/auth/login Login a user",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "email",
+											"value": "julian.huber@uni-ulm.de",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "qwe123",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{URL}}/api/auth/login",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/api/auth/logout Logout a user",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{URL}}/api/auth/logout",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"logout"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/api/auth/refresh Refresh token",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": ""
+								},
+								"url": {
+									"raw": "{{URL}}/api/auth/refresh",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"api",
+										"auth",
+										"refresh"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "3bd0f8b7-be37-4292-9501-126a153eff75",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "a89e2aa5-e22f-4c83-86b4-09b18887d2a9",
+								"type": "text/javascript",
+								"exec": [
+									""
+								]
+							}
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "password forgotten",
+					"item": [
+						{
+							"name": "/api/password/email Request a new password",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "email",
+											"value": "jul.huber91@gmail.com",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{URL}}/api/password/email",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"api",
+										"password",
+										"email"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/api/password/reset set a new password",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "email",
+											"value": "jul.huber91@gmail.com",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "q1q1q1",
+											"type": "text"
+										},
+										{
+											"key": "password_confirmation",
+											"value": "q1q1q1",
+											"type": "text"
+										},
+										{
+											"key": "token",
+											"value": "614b228f3a40d3e9fd47da3beba8f7639a6fb67cc65e923e655bd587a3b45da7",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{URL}}/api/password/reset",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"api",
+										"password",
+										"reset"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "create / update / delete",
+					"item": [
+						{
+							"name": "/api/user Creates a new user",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "firstname",
+											"value": "Testlor",
+											"type": "text"
+										},
+										{
+											"key": "lastname",
+											"value": "McTester",
+											"type": "text"
+										},
+										{
+											"key": "email",
+											"value": "julian.huber@uni-ulm.de",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "qwe123",
+											"type": "text"
+										},
+										{
+											"key": "password_confirmation",
+											"value": "qwe123",
+											"type": "text"
+										},
+										{
+											"key": "agb_accepted",
+											"value": "1",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{URL}}/api/user",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"api",
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/api/user Updates user data",
+							"request": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "firstname",
+											"value": "Testlor",
+											"type": "text"
+										},
+										{
+											"key": "lastname",
+											"value": "McTester",
+											"type": "text"
+										},
+										{
+											"key": "password",
+											"value": "qwe123",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "Ich bin so geil ",
+											"type": "text"
+										},
+										{
+											"key": "street",
+											"value": "Im Hesel",
+											"type": "text"
+										},
+										{
+											"key": "postcode",
+											"value": "88279",
+											"type": "text"
+										},
+										{
+											"key": "city",
+											"value": "A-Town",
+											"type": "text"
+										},
+										{
+											"key": "phone",
+											"value": "071071071",
+											"type": "text"
+										},
+										{
+											"key": "date_of_birth",
+											"value": "1987-02-14",
+											"type": "text"
+										},
+										{
+											"key": "gender",
+											"value": "Apache",
+											"type": "text"
+										},
+										{
+											"key": "new_password",
+											"value": "qwe123",
+											"type": "text"
+										},
+										{
+											"key": "new_password_confirmation",
+											"value": "qwe123",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{URL}}/api/user",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"api",
+										"user"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "/api/user Deletes the user that is logged in",
+							"request": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"name": "Content-Type",
+										"value": "application/x-www-form-urlencoded",
+										"type": "text"
+									}
+								],
+								"body": {
+									"mode": "urlencoded",
+									"urlencoded": [
+										{
+											"key": "password",
+											"value": "qwe123",
+											"type": "text",
+											"disabled": true
+										}
+									]
+								},
+								"url": {
+									"raw": "{{URL}}/api/user/508",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"api",
+										"user",
+										"508"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "email verification",
+					"item": [
+						{
+							"name": "/email/resend Resend the email verification code",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "accept",
+										"value": "application/json"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/x-www-form-urlencoded"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "email",
+											"value": "jul.huber91@gmail.com",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{URL}}/api/email/resend",
+									"host": [
+										"{{URL}}"
+									],
+									"path": [
+										"api",
+										"email",
+										"resend"
+									]
+								}
+							},
+							"response": []
+						}
+					],
+					"_postman_isSubFolder": true
+				},
+				{
+					"name": "/api/auth/me Shows the data of the user",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "accept",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
+						"url": {
+							"raw": "{{URL}}/api/auth/me",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"me"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "/api/auth/login Login a user",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "email",
+							"value": "testuser@example.org",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "qwe123",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{URL}}/api/auth/login",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Test if the server is running",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{URL}}/",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Swagger-UI",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{URL}}/swagger",
+					"host": [
+						"{{URL}}"
+					],
+					"path": [
+						"swagger"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOlwvXC9sb2NhbGhvc3Q6ODAwMFwvXC9hcGlcL2F1dGhcL2xvZ2luIiwiaWF0IjoxNTM4OTE1NjU2LCJleHAiOjE1NDE1NDM2NTYsIm5iZiI6MTUzODkxNTY1NiwianRpIjoiaEo5ZEd5VnljMmdTZkVQciIsInN1YiI6NTA4LCJwcnYiOiI4N2UwYWYxZWY5ZmQxNTgxMmZkZWM5NzE1M2ExNGUwYjA0NzU0NmFhIn0.hi5Wfp-oU_-k8WNRjfrkm8imJeB4hJUqZX2wwiBa70Q",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "9911629a-2103-4ec6-99e3-a61cc0fe88b5",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "743c7b82-7f54-4816-8557-9fbe1c9feb5c",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}

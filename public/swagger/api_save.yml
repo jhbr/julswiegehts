@@ -1,0 +1,1279 @@
+openapi: 3.0.0
+info:
+  title: IntersessionAPI
+  description: Api for the Intersession-App
+  version: 0.0.1
+servers:
+- url: https://intersession.shellyfish.de
+paths:
+  /:
+    get:
+      summary: Servercheck
+      description: Checks if the server is running
+      responses:
+        '200':
+          description: Server is online. Normally "Server läuft" is showing
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+
+  ######################################
+  ################# AUTH ###############
+  ######################################
+
+  # LOGIN
+  /api/auth/login:
+    post:
+      tags:
+      - auth
+      summary: Login
+      description: Tries to log into the system with an email and a password. Standard User-Emails in Testmode are "patient@example.org", "therapist@example.org" and "admin@example.org"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "patient@example.org"
+                password:
+                  type: string
+                  example: "qwe123"
+      responses:
+        '200':
+          description: Login was successful
+          content:
+            application/json:
+              schema:
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # LOGOUT
+  /api/auth/logout:
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - auth
+      summary: Logout
+      description: Logs out the current user
+      responses:
+        '200':
+          description: Logout was successfull
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # REFRESH TOKEN
+  /api/auth/refresh:
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - auth
+      summary: Refresh token
+      description: Deletes the current token and sends a new one
+      responses:
+        '200':
+          description: Login was successful
+          content:
+            application/json:
+              schema:
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/me:
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - auth
+      summary: Logged in User
+      description: Gets the logged in User. It always gives the userdata with the "data" key, but with different data, depending on what role the user hast in the system. See the User-Model for more information.
+      responses:
+        '200':
+          description: Gets the data of the currently logged in User
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: schema
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  ######################################
+  ############# PASSWORD ###############
+  ######################################
+
+  /api/password/email:
+    post:
+      tags:
+      - password
+      summary: Requests a new password
+      description: Given an entered email, it sends an Email with reset-instructions to the given user
+      responses:
+        '201':
+          description: Password-reset instructions have been successfully sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Eine Anleitung für das Zurücksetzen Ihres Passworts wurde Ihnen per E-Mail zugesandt.
+        '401':
+          description: Password instructions could not be sent. For example if the user to the email was not found.
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Neues Passwort konnte nicht angefordert werden.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/password/reset:
+    post:
+      tags:
+      - password
+      summary: Resets a password with the password-reset-token
+      description: Given the token that was sent via email, it resets the existing password of athe user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: example@example.org
+                password:
+                  type: string
+                password_confirmation:
+                  type: string
+                token:
+                  type: string
+                  example: 8aa2c638687f7b9d2384ca175ef70c5975e589344c83e44214f768d852b44338
+      responses:
+        '201':
+          description: Password has successfully been changed
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Neues Passwort wurde erfolgreich gesetzt.
+        '401':
+          description: Password could not be changed.
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Neues Passwort konnte nicht gesetzt werden. Bitte wenden Sie sich an einen Administrator.
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  ######################################
+  ################# ACCOUNT ############
+  ######################################
+
+  /api/user:
+    post:
+      tags:
+      - account
+      summary: Register new User
+      description: Registers a new User into the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: exp123
+                email:
+                  type: string
+                  example: example@example.org
+                date_of_birth:
+                  type: string
+                  example: 01.05.2001
+                gender:
+                  type: string
+                  example: male
+                password:
+                  type: string
+                  example: qwe123
+                password_confirmation:
+                  type: string
+                  example: qwe123
+      responses:
+        '200':
+          description: Success message for creating a new user
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      security:
+      - bearerAuth: []
+      tags:
+      - account
+      summary: Update logged in User
+      description: Updates the currently logged in user with the data, that is given. Be aware, that a normal user ("patient") can not change every column in the database, since they are not able to set street, phone, etc.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  example: qwe123
+                username:
+                  type: string
+                  example: blablabla123
+                email:
+                  type: string
+                  example: example@example.org
+                date_of_birth:
+                  type: string
+                  example: "2001-01-31"
+                gender:
+                  type: string
+                  example: male
+                new_password:
+                  type: string
+                  example: qwe123
+                new_password_confirmation:
+                  type: string
+                  example: qwe123
+                name:
+                  type: string
+                  example: Hallo Herbert (admin / therapist)
+                street:
+                  type: string
+                  example: Lindenstraße 12a (admin / therapist)
+                postcode:
+                  type: string
+                  example: 890890 (admin / therapist)
+                city:
+                  type: string
+                  example: Lalaland (admin / therapist)
+                phone:
+                  type: string
+                  example: "0123 / 1234567890 (admin / therapist)"
+      responses:
+        '200':
+          description: Successfully updated
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Änderungen erfolgreich gespeichert.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  ######################################
+  ############### THERAPIST ############
+  ######################################
+
+  /api/therapist:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - therapist
+      summary: Gets all therapists
+      description: Returns a collection of all therapists that are in the system.
+      responses:
+        '200':
+          description: Request ok, all data is sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user:
+                          type: schema
+                          $ref: '#/components/schemas/Therapist'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/therapist/request:
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - therapist
+      summary: Requests an upgrade to therapist-account
+      description: Makes a new request for the logged in Account to be set as therapist Account. Also checks if there is already a request or if the user is already a therapist.
+      responses:
+        '200':
+          description: Request for therapist-account is set (even if it was already set before)
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Therapeuten-Account wurde beantragt.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/therapist/pair:
+    put:
+      security:
+      - bearerAuth: []
+      tags:
+      - therapist
+      summary: Pairs the logged in user with a therapist
+      description: Given a code in the request, it pairs the user, that is logged in, with the therapist that belongs to that code.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                code:
+                  type: string
+                  example: blume
+      responses:
+        '200':
+          description: Patient is now paired with the therapist
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Erfolgreich mit neuem Therapeuten verbunden.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  ######################################
+  ############### ADMIN ###############
+  ######################################
+
+  /api/admin/request:
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - admin
+      summary: Requests an upgrade to admin-account
+      description: Makes a new request for the logged in Account to be set as admin Account. Also checks if there is already a request or if the user is already a therapist.
+      responses:
+        '200':
+          description: Request for admin-account is set (even if it was already set before)
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Admin-Account wurde beantragt.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - admin
+      summary: Gets all therapist- and admin-requests
+      description: Returns a collection of all admin- and therapist-requests.
+      responses:
+        '200':
+          description: Request ok, all data is sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        role:
+                          type: string
+                          example: therapist
+                        user:
+                          type: schema
+                          $ref: '#/components/schemas/Patient'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/admin/allow:
+    put:
+      security:
+      - bearerAuth: []
+      tags:
+      - admin
+      summary: Upgrades an account to therapist or admin
+      description: Tries to upgrade an account to admin-role or therapist-role. The role parameters decides if it is an admin or a therapist upgrade.
+      requestBody:
+        required: true
+        description: Type "admin" as role to upgrade to an admin account, type "therapist" as role to upgrade to a therapist accoutn
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: foobar@example.org
+                role:
+                  type: string
+                  example: therapist
+      responses:
+        '200':
+          description: Request for admin-account is set (even if it was already set before)
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Admin-Account wurde beantragt.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  ######################################
+  ############### PATIENT ##############
+  ######################################
+
+  /api/patient:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - patient
+      summary: Gets all paired patients
+      description: Returns a collection of all patients that are paired with the therapist that sent the request.
+      responses:
+        '200':
+          description: Request ok, all data is sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user:
+                          type: schema
+                          $ref: '#/components/schemas/Patient'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  /api/therapy/start:
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - patient
+      summary: Starts with the therapy of the logged in User
+      description: Starts with the therapy of the current logged in user
+      responses:
+        '200':
+          description: Successfully started therapy or hast already begone
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Therapie wurde erfolgreich gestartet.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/therapy/end:
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - patient
+      summary: Ends the therapy of a patient
+      description: A therapists can end the therapy of one of his patients.
+      requestBody:
+        required: true
+        description: To end the user's therapy, it has to be one of your patients and he has to be in a therapy
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                patient_id:
+                  type: integer
+                  example: 4
+      responses:
+        '200':
+          description: Successfully ended the therapy of the patient or it has already been ended
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Therapie wurde erfolgreich beendet und der Patient wurde entlassen.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Patient was not found in the therapist's patients
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: User wurde nicht unter Ihren Patienten gefunden.
+        '412':
+          description: The right conditions where not given
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Patient hat noch nicht mit der Therapie begonnen.
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  ######################################
+  ########### NOTIFICATION #############
+  ######################################
+
+  /api/notification:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - notifications
+      summary: Gets an amount of notifications
+      description: Returns a collection of all notifications, ordered by "newest first". The next page returns the next set of notifications
+      parameters:
+      - in: path
+        name: page
+        schema:
+          type: integer
+        required: true
+        description: page 1 gets the first 10 notifications, page 2 the next 10, and so on
+      responses:
+        '200':
+          description: Request ok, all data is sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        user:
+                          type: schema
+                          $ref: '#/components/schemas/Notification'
+                  links:
+                    type: schema
+                    $ref: '#/components/schemas/PaginateLinks'
+                  meta:
+                    type: schema
+                    $ref: '#/components/schemas/PaginateMeta'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/notification/click:
+    put:
+      security:
+      - bearerAuth: []
+      tags:
+      - notifications
+      summary: Marks a notification as visited
+      description: Checks if the notification belongs to the user that tries to click it and marks it as visited by setting the "clicked"-attribute to 1.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                  description: the id of the notification, that should be marked as clicked
+      responses:
+        '200':
+          description: Successfully updated
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Benachrichtigung angeklickt.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  ######################################
+  ########### SESSION ##################
+  ######################################
+
+  /api/session:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - sessions
+      summary: Gets sessions of the logged in User
+      description: Returns an array of sessions, each saved in an object of start, end and comment. Can be filteres by "from" and "to"
+      parameters:
+      - in: query
+        name: from
+        schema:
+          type: string
+        required: false
+        description: (Optional) date to only get sessions later than the given date
+        example: '2018-09-07 23:44:10'
+      - in: query
+        name: to
+        schema:
+          type: string
+        required: false
+        description: (Optional) date to only get sessions sooner than the given date
+        example: '2018-09-07 23:44:10'
+      responses:
+        '200':
+          description: Request ok, all data is sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: schema
+                      $ref: '#/components/schemas/Session'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - sessions
+      summary: Saves a session into the system
+      description: Saves a session in the system, which automatically belongs to the logged in user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                start:
+                  type: string
+                  example: '2018-09-07 13:00:00'
+                  description: The date and time when the session starts
+                end:
+                  type: string
+                  example: '2018-09-07 14:30:00'
+                  description: The date and time when the session ends
+                comment:
+                  type: string
+                  example: 'Im Behandlungszimmer 12a, Hauptgebäude'
+                  description: The date and time when the session ends
+      responses:
+        '200':
+          description: Successfully saved into the system
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Session-Termin wurde gespeichert.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/session/{id}:
+    delete:
+      security:
+      - bearerAuth: []
+      tags:
+      - sessions
+      summary: Deletes session
+      description: Deletes a session from the system. Only the sessions of a logged in user can be deleted.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: the id of the session that is to be deleted
+      responses:
+        '200':
+          description: Successfully deleted the session
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Session erfolgreich gelöscht.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+  ######################################
+  ######### QUESTIONNAIRES #############
+  ######################################
+
+  /api/questionnaire/assignment:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - questionnaires
+      summary: Get questionnaire-assignments of the logged in user
+      description: Returns an array of assignments, each saved in an object with further information.
+      responses:
+        '200':
+          description: Request ok, all data is sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: schema
+                      $ref: '#/components/schemas/Assignment'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/questionnaire/get:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - questionnaires
+      summary: Get an overview of the questionnaires
+      description: Returns an array of all available Questionnaires in the system.
+      responses:
+        '200':
+          description: Request ok, all data is sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: schema
+                      $ref: '#/components/schemas/QuestionnaireOverview'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/questionnaire/get/{id}:
+    get:
+      security:
+      - bearerAuth: []
+      tags:
+      - questionnaires
+      summary: Get a questionnaire
+      description: Returns a questionnaire with name and description and all questions with every possible answer.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: the id of the session that is to be deleted
+      responses:
+        '200':
+          description: Request ok, all data is sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: schema
+                      $ref: '#/components/schemas/Questionnaire'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: Questionnaire was not found in the database
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Fragebogen mit dieser ID nicht gefunden.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+components:
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            properties:
+              message:
+                type: string
+                example: Unauthenticated.
+    InternalServerError:
+      description: Standard error of Laravel, so could be an implementation error
+    UnprocessableEntityError:
+      description: Occures, when the given input is not valid. Returns a message with an object, that contains one or more arrays of errors to a field.
+      content:
+        application/json:
+          schema:
+            properties:
+              message:
+                type: string
+                example: The given data was invalid.
+              errors:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: The email is not valid
+                  password:
+                    type: string
+                    example: The password field is required
+
+
+  schemas:
+
+    # USER
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        date_of_birth:
+          type: string
+          description: as valid date
+        gender:
+          type: string
+        is_therapist:
+          type: boolean
+          description: only seen as therapist or admin
+        is_admin:
+          type: boolean
+          description: only seen as admin
+        name:
+          type: string
+          description: only seen as therapist or admin
+        street:
+          type: string
+          description: only seen as therapist or admin
+        postcode:
+          type: string
+          description: only seen as therapist or admin
+        city:
+          type: string
+          description: only seen as therapist or admin
+        phone:
+          type: string
+          description: only seen as therapist or admin
+        therapist_code:
+          type: string
+          description: The string to pair - only seen as therapist or admin
+        therapist:
+          type: schema
+          $ref: '#/components/schemas/Therapist'
+        therapy_started_at:
+          type: string
+          description: Only seen when the user has started a therapy already
+        therapy_ended_at:
+          type: string
+          description: Only seen when the user has ended a therapy already
+
+    # PATIENT
+    Patient:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        date_of_birth:
+          type: string
+          description: as valid date
+        gender:
+          type: string
+        therapy_started_at:
+          type: string
+          description: The date where the patient started his therapy
+        therapy_ended_at:
+          type: string
+          description: The date where the patient ended his therapy
+
+    # THERAPIST
+    Therapist:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+        gender:
+          type: string
+        street:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        phone:
+          type: string
+
+    # NOTIFICATION
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+        link:
+          type: string
+          description: may lead to further action (not used atm)
+        name:
+          type: string
+          description: The headline of the notification
+        description:
+          type: string
+          description: The content
+        clicked:
+          type: boolean
+          description: when it is clicked, it was already opened
+        created_at:
+          type: string
+          description: Creation datetime of the notification
+
+    # PAGINATE-LINKS
+    PaginateLinks:
+      type: object
+      properties:
+        first:
+          type: string
+          example: "http://localhost:8000/api/notification?page=1"
+          description: The first page of the resource
+        last:
+          type: string
+          example: "http://localhost:8000/api/notification?page=3"
+          description: The last page of the resource
+        prev:
+          type: string
+          example: null
+          description: The previous page (if there is one)
+        next:
+          type: string
+          example: "http://localhost:8000/api/notification?page=2"
+          description: The next page (if there is one)
+
+    # PAGINATE-LINKS
+    PaginateMeta:
+      type: object
+      properties:
+        path:
+          type: string
+          example: "http://localhost:8000/api/notification"
+          description: The url without page in the request
+        current_page:
+          type: integer
+          example: 1
+          description: The page that was requested
+        last_page:
+          type: integer
+          example: 11
+          description: How many pages exist
+        per_page:
+          type: integer
+          example: 10
+          description: How many elements are sent per page
+        from:
+          type: integer
+          example: 10
+          description: Number of the first element (attention, not id, but just the count)
+        to:
+          type: integer
+          example: 19
+          description: Number of the last element (attention, not id, but just the count)
+        total:
+          type: integer
+          example: 109
+          description: How many elements exist
+
+    # SESSION
+    Session:
+      type: object
+      properties:
+        start:
+          type: string
+          example: '2018-09-07 13:45:00'
+          description: The start date and time of the session
+        end:
+          type: string
+          example: '2018-09-07 14:30:00'
+          description: The end date and time of the session
+        comment:
+          type: string
+          example: 'Im Behandlungszimmer 2'
+          description: Any further comment
+
+
+    # ASSIGNMENT
+    Assignment:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+          description: The ID of the assignment (not the questionnaire!)
+        questionnaire_id:
+          type: integer
+          example: 12
+          description: The id of the questionnaire
+        questionnaire_name:
+          type: string
+          example: 'Childhood-Trauma-Questionnaire (CTQ)'
+          description: The name of the questionnaire
+
+    # QUESTIONNAIRE
+    Questionnaire:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+          description: The ID of the answer
+        name:
+          type: string
+          example: "Intersession-Fragebogen Kurzversion (ISF-K)"
+          description: The name of the questionnaire
+        description:
+          type: string
+          example: "Wir möchten von Ihnen gerne erfahren, was Sie zwischen den Therapiesit..."
+          description: The text above each questionnaire
+        questions:
+          type: array
+          items:
+            type: schema
+            $ref: '#/components/schemas/Question'
+
+    # QUESTIONNAIRE_OVERVIEW
+    QuestionnaireOverview:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+          description: The ID of the answer
+        name:
+          type: string
+          example: "Intersession-Fragebogen Kurzversion (ISF-K)"
+          description: The name of the questionnaire
+        description:
+          type: string
+          example: "Wir möchten von Ihnen gerne erfahren, was Sie zwischen den Therapiesit..."
+          description: The text above each questionnaire
+
+    # QUESTION
+    Question:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+          description: The ID of the answer
+        name:
+          type: string
+          example: "Wie häufig haben Sie im Allgemeinen an die Therapie oder Ihre/Ihren TherapeutIn gedacht?"
+          description: The name of the question (so the question itself)
+        order:
+          type: integer
+          example: 1
+          description: The questions will be sorted by order, from 1 to n
+        type:
+          type: integer
+          example: 1
+          description: Questions are classified in types, where 0 = Question with no answer, 1 = question with answers and 2 = textfield question
+        answers:
+          type: array
+          items:
+            type: schema
+            $ref: '#/components/schemas/Answer'
+
+    # ANSWER
+    Answer:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 5
+          description: The ID of the answer
+        name:
+          type: string
+          example: "Trifft eher zu"
+          description: The name of answer (so the answer itself)
+        order:
+          type: integer
+          example: 1
+          description: The answers will be sorted by order, from 1 to n
+
+
+tags:
+- name: default
+  description: Check server state
+- name: auth
+  description: Routes regarding the login-state
+- name: password
+  description: Request and change password if forgotten
+- name: account
+  description: Store users, get own user, change user data
+- name: patient
+  description: All routes regarding patients
+- name: therapist
+  description: All routes regarding therapists
+- name: admin
+  description: All routes regarding admins
+- name: notifications
+  description: Get notifications and mark them as visited
+- name: sessions
+  description: a session is a meeting with the therapist
+- name: questionnaires
+  description: get and answer questionnaires
+- name: interventions
+  description: an intervention is a kind of therpy for the patient

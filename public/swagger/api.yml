@@ -1,0 +1,663 @@
+openapi: 3.0.0
+info:
+  title: Physio Assistant api
+  description: Api for the Intersession-App
+  version: 0.0.1
+servers:
+- url: https://shellyfish.de
+paths:
+  /:
+    get:
+      summary: Servercheck
+      description: Checks if the server is running
+      responses:
+        '200':
+          description: Server is online. Normally "Server läuft" is showing
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Intersession - Server läuft
+
+  ######################################
+  ################# AUTH ###############
+  ######################################
+
+  # LOGIN
+  /api/auth/login:
+    post:
+      tags:
+      - auth
+      summary: Login
+      description: Tries to log into the system with an email and a password. Standard User-Emails in Testmode are "patient@example.org", "therapist@example.org" and "admin@example.org"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "patient@example.org"
+                password:
+                  type: string
+                  example: "qwe123"
+      responses:
+        '200':
+          description: Login was successful
+          content:
+            application/json:
+              schema:
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          description: Email was not yet verificated
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Ihre E-Mail-Adresse wurde noch nicht bestätigt.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # LOGOUT
+  /api/auth/logout:
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - auth
+      summary: Logout
+      description: Logs out the current user
+      responses:
+        '200':
+          description: Logout was successfull
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # REFRESH TOKEN
+  /api/auth/refresh:
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - auth
+      summary: Refresh token
+      description: Deletes the current token and sends a new one
+      responses:
+        '200':
+          description: Login was successful
+          content:
+            application/json:
+              schema:
+                properties:
+                  access_token:
+                    type: string
+                  token_type:
+                    type: string
+                  expires_in:
+                    type: integer
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/auth/me:
+    post:
+      security:
+      - bearerAuth: []
+      tags:
+      - auth
+      summary: Show currently logged in User
+      description: Gets the logged in User. It always gives the userdata with the "data" key, but with different data, depending on what role the user hast in the system. See the User-Model for more information.
+      responses:
+        '200':
+          description: Gets the data of the currently logged in User
+          content:
+            application/json:
+              schema:
+                properties:
+                  data:
+                    type: schema
+                    $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+
+  ######################################
+  ############### USER #################
+  ######################################
+
+  /api/user:
+    post:
+      tags:
+      - user
+      summary: Register new User
+      description: Registers a new User into the system
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstname:
+                  type: string
+                  example: Domenika
+                lastname:
+                  type: string
+                  example: Muller
+                email:
+                  type: string
+                password:
+                  type: string
+                  example: qwe123
+                password_confirmation:
+                  type: string
+                  example: qwe123
+                agb_accepted:
+                  type: boolean
+                  example: true
+      responses:
+        '200':
+          description: Success message for creating a new user
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    put:
+      security:
+      - bearerAuth: []
+      tags:
+      - user
+      summary: Update logged in User
+      description: Updates the currently logged in user with the data, that is given
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                password:
+                  type: string
+                  example: qwe123
+                firstname:
+                  type: string
+                  example: Domenika
+                lastname:
+                  type: string
+                  example: Muller
+                description:
+                  type: string
+                  example: "Ich bin ein freier Elf!"
+                street:
+                  type: string
+                  example: Lindenstraße 12a
+                postcode:
+                  type: string
+                  example: 89089
+                city:
+                  type: string
+                  example: Lalaland
+                phone:
+                  type: string
+                  example: "0123 / 1234567890"
+                date_of_birth:
+                  type: string
+                  example: "2001-01-31"
+                gender:
+                  type: string
+                  example: male
+                new_password:
+                  type: string
+                  example: qwe123
+                new_password_confirmation:
+                  type: string
+                  example: qwe123
+      responses:
+        '200':
+          description: Successfully updated
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Änderungen erfolgreich gespeichert.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/user/{id}:
+    delete:
+      security:
+      - bearerAuth: []
+      tags:
+      - user
+      summary: Deletes the user
+      description: Deletes the user with the id in the path, but only if it is the same user that is currently logged in.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+        description: the id of the user that is to be deleted. that has to be the user that is logged in.
+      responses:
+        '200':
+          description: Successfully deleted
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Nutzer erfolgreich gelöscht.
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+
+  ######################################
+  ############# PASSWORD ###############
+  ######################################
+
+  /api/password/email:
+    post:
+      tags:
+      - password
+      summary: Requests a new password
+      description: Given an entered email-adress, it sends an Email with reset-instructions to the given user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: example@example.org
+      responses:
+        '201':
+          description: Password-reset instructions have been successfully sent
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Eine Anleitung für das Zurücksetzen Ihres Passworts wurde Ihnen per E-Mail zugesandt.
+        '401':
+          description: Password instructions could not be sent. For example if the user to the email was not found.
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Neues Passwort konnte nicht angefordert werden.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/password/reset:
+    post:
+      tags:
+      - password
+      summary: Resets a password with the password-reset-token
+      description: Given the token that was sent via email, it resets the existing password of athe user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: example@example.org
+                password:
+                  type: string
+                password_confirmation:
+                  type: string
+                token:
+                  type: string
+                  example: 8aa2c638687f7b9d2384ca175ef70c5975e589344c83e44214f768d852b44338
+      responses:
+        '201':
+          description: Password has successfully been changed
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Neues Passwort wurde erfolgreich gesetzt.
+        '401':
+          description: Password could not be changed.
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Neues Passwort konnte nicht gesetzt werden. Bitte wenden Sie sich an einen Administrator.
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+
+  ######################################
+  ######## EMAIL VERIFICATION ##########
+  ######################################
+
+  /api/email/resend:
+    post:
+      tags:
+      - email
+      summary: Sends an Email with a Verification link
+      description: The system checks if the data is correct and if the given user is not verificated yet. If the user is not verified, it creates a new link and sends it to the user's email-adress
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: example@example.org
+      responses:
+        '200':
+          description: Email has successfully changed or Email is already verified
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Neues Passwort wurde erfolgreich gesetzt.
+        '404':
+          description: User with the given email was not found
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: User nicht gefunden.
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          description: Server error or Verification mail could not be sent.
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Verification Email konnte nicht gesendet werden.
+
+  /api/email/verify:
+    post:
+      tags:
+      - email
+      summary: Verifies the user's email
+      description: Verifies the user's email adress by clicking on a link, that is sent via E-Mail Adress.
+      parameters:
+      - in: path
+        name: email
+        schema:
+          type: string
+        required: true
+        description: the email of the user that is to be verified
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+        description: the token that belongs to the user
+      responses:
+        '200':
+          description: Email verification successfull
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Email erfolgreich verifiziert.
+        '403':
+          description: Token could not be changed.
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Token abgelaufen. Bitte beantragen Sie einen neuen.
+        '404':
+          description: User with the given email was not found
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: User nicht gefunden.
+        '422':
+          $ref: '#/components/responses/UnprocessableEntityError'
+        '500':
+          description: Server error or Email could not be verified.
+          content:
+            application/json:
+              schema:
+                properties:
+                  message:
+                    type: string
+                    example: Email konnte nicht verifiziert werden. Beantragen Sie eine neue Verifikations-Email oder kontaktieren Sie einen Administrator.
+
+
+  ######################################
+  ################# ACCOUNT ############
+  ######################################
+
+
+  ######################################
+  ############### ADMIN ################
+  ######################################
+
+
+  ######################################
+  ########### NOTIFICATION #############
+  ######################################
+
+
+  ######################################
+  ########### SESSION ##################
+  ######################################
+
+
+  ######################################
+  ######### QUESTIONNAIRES #############
+  ######################################
+
+
+
+
+components:
+  securitySchemes:
+    bearerAuth:            # arbitrary name for the security scheme
+      type: http
+      scheme: bearer
+      bearerFormat: JWT    # optional, arbitrary value for documentation purposes
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+      content:
+        application/json:
+          schema:
+            properties:
+              message:
+                type: string
+                example: Unauthenticated.
+    InternalServerError:
+      description: Standard error of Laravel, so could be an implementation error
+    UnprocessableEntityError:
+      description: Occures, when the given input is not valid. Returns a message with an object, that contains one or more arrays of errors to a field.
+      content:
+        application/json:
+          schema:
+            properties:
+              message:
+                type: string
+                example: The given data was invalid.
+              errors:
+                type: object
+                properties:
+                  email:
+                    type: string
+                    example: The email is not valid
+                  password:
+                    type: string
+                    example: The password field is required
+
+
+  schemas:
+
+    # USER
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstname:
+          type: string
+        lastname:
+          type: string
+        email:
+          type: string
+        description:
+          type: string
+        street:
+          type: string
+        postcode:
+          type: string
+        city:
+          type: string
+        phone:
+          type: string
+        date_of_birth:
+          type: string
+        gender:
+          type: string
+        is_admin:
+          type: boolean
+          description: only seen as admin
+
+    # PAGINATE-LINKS
+    PaginateLinks:
+      type: object
+      properties:
+        first:
+          type: string
+          example: "http://localhost:8000/api/notification?page=1"
+          description: The first page of the resource
+        last:
+          type: string
+          example: "http://localhost:8000/api/notification?page=3"
+          description: The last page of the resource
+        prev:
+          type: string
+          example: null
+          description: The previous page (if there is one)
+        next:
+          type: string
+          example: "http://localhost:8000/api/notification?page=2"
+          description: The next page (if there is one)
+
+    # PAGINATE-LINKS
+    PaginateMeta:
+      type: object
+      properties:
+        path:
+          type: string
+          example: "http://localhost:8000/api/notification"
+          description: The url without page in the request
+        current_page:
+          type: integer
+          example: 1
+          description: The page that was requested
+        last_page:
+          type: integer
+          example: 11
+          description: How many pages exist
+        per_page:
+          type: integer
+          example: 10
+          description: How many elements are sent per page
+        from:
+          type: integer
+          example: 10
+          description: Number of the first element (attention, not id, but just the count)
+        to:
+          type: integer
+          example: 19
+          description: Number of the last element (attention, not id, but just the count)
+        total:
+          type: integer
+          example: 109
+          description: How many elements exist
+
+
+tags:
+- name: default
+  description: Check server state
+- name: auth
+  description: Routes regarding the login-state
+- name: user
+  description: Routes regarding the user-resource
+- name: password
+  description: Request and change password if forgotten
+- name: email
+  description: Request and change password if forgotten
